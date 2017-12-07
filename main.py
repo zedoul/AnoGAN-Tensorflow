@@ -63,14 +63,14 @@ def main(_):
             checkpoint_dir=FLAGS.checkpoint_dir,
             sample_dir=FLAGS.sample_dir)
 
-    show_all_variables()
+        show_all_variables()
 
-    if FLAGS.train:
-        dcgan.train(FLAGS)
-    else:
-        if not dcgan.load(FLAGS.checkpoint_dir)[0]:
-            raise Exception("[!] Train a model first, then run test mode")
-        # do the detection work
+        if FLAGS.train:
+            dcgan.train(FLAGS)
+        else:
+            if not dcgan.load(FLAGS.checkpoint_dir)[0]:
+                raise Exception("[!] Train a model first, then run test mode")
+            # do the detection work
 
 
 if __name__ == '__main__':
