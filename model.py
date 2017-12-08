@@ -265,9 +265,71 @@ class DCGAN(object):
 
         self.data = glob(os.path.join(
             "./data", config.dataset, self.input_fname_pattern))
-        batch_idxs = min(len(self.data), config.train_size) // config.batch_size
+        nImgs = len(self.data)
+        anomaly_score = np.zeros([nImgs], dtype='float32')
+        batch_idxs = int(np.ceil(nImgs / self.batch_size))
 
+        for idx in xrange(0, batch_idxs):
+            l = idx * self.batch_size
+            u = min((idx + 1) * self.batch_size, nImgs)
+            batchSz = u - l
+            batch_files = self.data[l:u]
+            batch = [
+                get_image(batch_file,
+                          input_height=self.input_height,
+                          input_width=self.input_width,
+                          resize_height=self.output_height,
+                          resize_width=self.output_width,
+                          crop=self.crop,
+                          grayscale=self.grayscale) for batch_file in batch_files]
+            if self.grayscale:
+                batch_images = np.array(batch).astype(np.float32)[:, :, :, None]
+            else:
+                batch_images = np.array(batch).astype(np.float32)
 
+            zhats = np.random.uniform(-1, 1, size=(batchSz, self.z_dim))
+            m = 0
+            v = 0
+
+            nRows = np.ceil(batchSz / 8)
+            nCols = min(8, batchSz)
+            save_images(batch_images[:batchSz, :, :, :], [nRows, nCols],
+                        os.path.join(config.outDir, 'before.png'))
+            for img in range(batchSz):
+                with open(os.path.join(config.outDir, 'logs/hats_{:02d}.log'.format(img)), 'a') as f:
+                    f.write('iter loss ' +
+                            ' '.join(['z{}'.format(zi) for zi in range(self.z_dim)]) +
+                            '\n')
+
+            loss = 0
+            G_imgs = 0
+            # start iteration
+            for i in xrange(config.Iter):
+                fd = {self.inputs: batch_images, self.z: zhats}
+                run_step = [self.complete_loss, self.grad_complete_loss, self.G]
+                loss, g, G_imgs = self.sess.run(run_step, feed_dict=fd)
+
+                # adam
+                m_prev = np.copy(m)
+                v_prev = np.copy(v)
+                m = config.beta1 * m_prev + (1 - config.beta1) * g[0]
+                v = config.beta2 * v_prev + (1 - config.beta2) * np.multiply(g[0], g[0])
+                m_hat = m / (1 - config.beta1 ** (i + 1))
+                v_hat = v / (1 - config.beta2 ** (i + 1))
+                zhats += - np.true_divide(config.lr * m_hat, (np.sqrt(v_hat) + config.eps))
+                zhats = np.clip(zhats, -1, 1)
+
+            for index in xrange(batchSz):
+                imgName = os.path.join(config.outDir, 'generated/{:04d}.png'.format(l + index))
+                nRows = np.ceil(batchSz / 8)
+                nCols = min(8, batchSz)
+                save_images(G_imgs[:batchSz, :, :, :], [nRows, nCols], imgName)
+
+            for index in xrange(batchSz):
+                anomaly_score[l + index] = loss[index]
+
+        # TODO : deal with anomaly_score(loss vector)
+        # TODO : how to get the ground truth label?
 
     def discriminator(self, image, reuse=False):
         with tf.variable_scope("discriminator") as scope:
