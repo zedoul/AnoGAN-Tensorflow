@@ -87,7 +87,7 @@ class DCGAN(object):
             image_dims = [self.input_height, self.input_width, self.c_dim]
 
         self.inputs = tf.placeholder(
-            tf.float32, [self.batch_size] + image_dims, name='real_images')
+            tf.float32, [None] + image_dims, name='real_images')
 
         inputs = self.inputs
 
@@ -131,6 +131,13 @@ class DCGAN(object):
         self.g_vars = [var for var in t_vars if 'g_' in var.name]
 
         self.saver = tf.train.Saver()
+
+        # detect anomaly
+        numda = 0.1
+        self.discriminator_loss = self.d_loss
+        self.residual_loss = 2 * tf.nn.l2_loss(self.inputs - self.G)
+        self.complete_loss = (1 - numda) * self.residual_loss + numda * self.discriminator_loss
+        self.grad_complete_loss = tf.gradients(self.complete_loss, self.z)
 
     def train(self, config):
         d_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
@@ -238,6 +245,29 @@ class DCGAN(object):
 
                 if np.mod(counter, 500) == 2:
                     self.save(config.checkpoint_dir, counter)
+
+    def detect_anomaly(self, config):
+        def make_dir(name):
+            p = os.path.join(config.outDir, name)
+            if not os.path.exists(p):
+                os.makedirs(p)
+
+        make_dir('generated')
+        make_dir('logs')
+
+        try:
+            tf.global_variables_initializer().run()
+        except:
+            tf.initialize_all_variables().run()
+
+        isLoaded = self.load(self.checkpoint_dir)
+        assert (isLoaded)
+
+        self.data = glob(os.path.join(
+            "./data", config.dataset, self.input_fname_pattern))
+        batch_idxs = min(len(self.data), config.train_size) // config.batch_size
+
+
 
     def discriminator(self, image, reuse=False):
         with tf.variable_scope("discriminator") as scope:
