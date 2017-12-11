@@ -338,6 +338,8 @@ class DCGAN(object):
 
         # TODO : deal with anomaly_score(loss vector)
         # TODO : how to get the ground truth label(test_labels)
+        print(loss)
+        print(test_labels)
 
     def discriminator(self, image, reuse=False):
         with tf.variable_scope("discriminator") as scope:
