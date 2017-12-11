@@ -334,6 +334,7 @@ class DCGAN(object):
                 save_images(G_imgs[:batchSz, :, :, :], [nRows, nCols], imgName)
 
             for index in xrange(batchSz):
+                print(loss)
                 anomaly_score[l+index] = loss[index]
 
         # TODO : deal with anomaly_score(loss vector)
