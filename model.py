@@ -317,9 +317,8 @@ class DCGAN(object):
             # start iteration
             for i in xrange(config.Iter):
                 fd = {self.inputs: batch_images, self.z: zhats}
-                run_step = [self.complete_loss, self.grad_complete_loss, self.G, self.discriminator_loss, self.residual_loss]
-                loss, g, G_imgs, d_loss, r_loss= self.sess.run(run_step, feed_dict=fd)
-                print(batch_images.shape)
+                run_step = [self.complete_loss, self.grad_complete_loss, self.G]
+                loss, g, G_imgs = self.sess.run(run_step, feed_dict=fd)
 
                 # adam
                 m_prev = np.copy(m)
@@ -338,7 +337,7 @@ class DCGAN(object):
                 save_images(G_imgs[:batchSz, :, :, :], [nRows, nCols], imgName)
 
             for index in xrange(batchSz):
-                anomaly_score[l+index] = loss[index]
+                anomaly_score[l+index] = loss
 
         # TODO : deal with anomaly_score(loss vector)
         # TODO : how to get the ground truth label(test_labels)

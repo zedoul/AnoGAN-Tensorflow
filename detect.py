@@ -6,7 +6,7 @@ from model import DCGAN
 
 flags = tf.app.flags
 flags.DEFINE_float("train_size", np.inf, "The size of train images [np.inf]")
-flags.DEFINE_integer("batch_size", 64, "The size of batch images [64]")
+flags.DEFINE_integer("batch_size", 1, "The size of batch images [64]")
 flags.DEFINE_integer("input_height", 108, "The size of image to use (will be center cropped). [108]")
 flags.DEFINE_integer("input_width", None,
                      "The size of image to use (will be center cropped). If None, same value as input_height [None]")
