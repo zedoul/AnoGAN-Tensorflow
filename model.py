@@ -8,6 +8,7 @@ import numpy as np
 from six.moves import xrange
 from keras.datasets import cifar10
 import cPickle
+from sklearn.metrics import roc_auc_score
 
 from ops import *
 from utils import *
@@ -324,6 +325,8 @@ class DCGAN(object):
         f.close()
         print(anomaly_score)
         print(test_labels)
+        AUC_score = roc_auc_score(test_labels, anomaly_score)
+        print(AUC_score)
 
     def discriminator(self, image, reuse=False):
         with tf.variable_scope("discriminator") as scope:
