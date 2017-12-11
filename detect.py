@@ -29,23 +29,30 @@ flags.DEFINE_string("outDir", "completions", "output Dir")
 
 FLAGS = flags.FLAGS
 
-# assert(os.path.exists(FLAGS.checkpoint_dir))
 
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-with tf.Session(config=config) as sess:
-    dcgan = DCGAN(
-        sess,
-        input_width=FLAGS.input_width,
-        input_height=FLAGS.input_height,
-        output_width=FLAGS.output_width,
-        output_height=FLAGS.output_height,
-        batch_size=FLAGS.batch_size,
-        sample_num=FLAGS.batch_size,
-        z_dim=FLAGS.latent_dim,
-        dataset_name=FLAGS.dataset,
-        input_fname_pattern=FLAGS.input_fname_pattern,
-        crop=FLAGS.crop,
-        checkpoint_dir=FLAGS.checkpoint_dir)
+def main(_):
 
-    dcgan.detect_anomaly(FLAGS)
+    assert(os.path.exists(FLAGS.checkpoint_dir))
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+        dcgan = DCGAN(
+            sess,
+            input_width=FLAGS.input_width,
+            input_height=FLAGS.input_height,
+            output_width=FLAGS.output_width,
+            output_height=FLAGS.output_height,
+            batch_size=FLAGS.batch_size,
+            sample_num=FLAGS.batch_size,
+            z_dim=FLAGS.latent_dim,
+            dataset_name=FLAGS.dataset,
+            input_fname_pattern=FLAGS.input_fname_pattern,
+            crop=FLAGS.crop,
+            checkpoint_dir=FLAGS.checkpoint_dir)
+
+        dcgan.detect_anomaly(FLAGS)
+
+
+if __name__ == '__main__':
+    tf.app.run()
