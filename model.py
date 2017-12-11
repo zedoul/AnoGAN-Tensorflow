@@ -137,14 +137,13 @@ class DCGAN(object):
 
         # detect anomaly
         numda = 0.1
-        # self.discriminator_loss = tf.reduce_mean(
-        #     sigmoid_cross_entropy_with_logits(self.D_logits, tf.ones_like(self.D)), [1]) + tf.reduce_mean(
-        #     sigmoid_cross_entropy_with_logits(self.D_logits_, tf.zeros_like(self.D_)), [1])
-        self.discriminator_loss = self.d_loss
-        print (self.discriminator_loss.shape)
-        # self.residual_loss = tf.reduce_sum(tf.square(self.inputs - self.G), [1, 2, 3])
-        self.residual_loss = 2 * tf.nn.l2_loss(self.inputs - self.G)
-        print (self.residual_loss.shape)
+
+        self.discriminator_loss = tf.reduce_mean(
+            sigmoid_cross_entropy_with_logits(self.D_logits, tf.ones_like(self.D)), [1]) + tf.reduce_mean(
+            sigmoid_cross_entropy_with_logits(self.D_logits_, tf.zeros_like(self.D_)), [1])
+
+        self.residual_loss = tf.reduce_sum(tf.square(self.inputs - self.G), [1, 2, 3])
+
         self.complete_loss = (1 - numda) * self.residual_loss + numda * self.discriminator_loss
         self.grad_complete_loss = tf.gradients(self.complete_loss, self.z)
 
@@ -269,8 +268,6 @@ class DCGAN(object):
 
         # used to validate first
         _, (self.data, Y_test) = cifar10.load_data()
-        self.data = self.data[:200]
-        Y_test = Y_test[:200]
         test_labels = np.array(map(lambda x: -1 if (x != 6) else 1, Y_test))
         nImgs = len(self.data)
         anomaly_score = np.zeros([nImgs], dtype='float32')
