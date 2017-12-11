@@ -278,6 +278,7 @@ class DCGAN(object):
         anomaly_score = np.zeros([nImgs], dtype='float32')
         batch_idxs = int(np.ceil(nImgs / self.batch_size))
 
+        loss = 0
         for idx in xrange(0, batch_idxs):
             l = idx * self.batch_size
             u = min((idx + 1) * self.batch_size, nImgs)
@@ -312,14 +313,15 @@ class DCGAN(object):
                             ' '.join(['z{}'.format(zi) for zi in range(self.z_dim)]) +
                             '\n')
 
-            loss = 0
             G_imgs = 0
             # start iteration
             for i in xrange(config.Iter):
                 fd = {self.inputs: batch_images, self.z: zhats}
-                run_step = [self.complete_loss, self.grad_complete_loss, self.G]
-                loss, g, G_imgs = self.sess.run(run_step, feed_dict=fd)
-                print(loss)
+                run_step = [self.complete_loss, self.grad_complete_loss, self.G, self.discriminator_loss, self.residual_loss]
+                loss, g, G_imgs, d_loss, r_loss= self.sess.run(run_step, feed_dict=fd)
+                print(d_loss.shape)
+                print(r_loss.shape)
+                print(loss.shape)
 
                 # adam
                 m_prev = np.copy(m)
@@ -338,7 +340,6 @@ class DCGAN(object):
                 save_images(G_imgs[:batchSz, :, :, :], [nRows, nCols], imgName)
 
             for index in xrange(batchSz):
-                print(loss)
                 anomaly_score[l+index] = loss[index]
 
         # TODO : deal with anomaly_score(loss vector)
