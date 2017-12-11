@@ -137,8 +137,8 @@ class DCGAN(object):
         # detect anomaly
         numda = 0.1
         self.discriminator_loss = tf.reduce_mean(
-            sigmoid_cross_entropy_with_logits(self.D_logits, tf.ones_like(self.D)), [1, 2, 3]) + tf.reduce_mean(
-            sigmoid_cross_entropy_with_logits(self.D_logits_, tf.zeros_like(self.D_)), [1, 2, 3])
+            sigmoid_cross_entropy_with_logits(self.D_logits, tf.ones_like(self.D)), [1]) + tf.reduce_mean(
+            sigmoid_cross_entropy_with_logits(self.D_logits_, tf.zeros_like(self.D_)), [1])
         print (self.discriminator_loss.shape)
         self.residual_loss = tf.reduce_sum(tf.square(self.inputs - self.G), [1, 2, 3])
         print (self.residual_loss.shape)
