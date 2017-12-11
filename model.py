@@ -299,15 +299,15 @@ class DCGAN(object):
             m = 0
             v = 0
 
-            nRows = np.ceil(batchSz / 8)
-            nCols = min(8, batchSz)
-            save_images(batch_images[:batchSz, :, :, :], [nRows, nCols],
-                        os.path.join(config.outDir, 'before.png'))
-            for img in range(batchSz):
-                with open(os.path.join(config.outDir, 'logs/hats_{:02d}.log'.format(img)), 'a') as f:
-                    f.write('iter loss ' +
-                            ' '.join(['z{}'.format(zi) for zi in range(self.z_dim)]) +
-                            '\n')
+            # nRows = np.ceil(batchSz / 8)
+            # nCols = min(8, batchSz)
+            # save_images(batch_images[:batchSz, :, :, :], [nRows, nCols],
+            #             os.path.join(config.outDir, 'before.png'))
+            # for img in range(batchSz):
+            #     with open(os.path.join(config.outDir, 'logs/hats_{:02d}.log'.format(img)), 'a') as f:
+            #         f.write('iter loss ' +
+            #                 ' '.join(['z{}'.format(zi) for zi in range(self.z_dim)]) +
+            #                 '\n')
 
             loss = 0
             G_imgs = 0
@@ -334,7 +334,7 @@ class DCGAN(object):
                 save_images(G_imgs[:batchSz, :, :, :], [nRows, nCols], imgName)
 
             for index in xrange(batchSz):
-                anomaly_score[l + index] = loss[index]
+                anomaly_score[l+index] = loss[index]
 
         # TODO : deal with anomaly_score(loss vector)
         # TODO : how to get the ground truth label(test_labels)
