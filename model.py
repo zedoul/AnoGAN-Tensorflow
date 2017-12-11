@@ -341,7 +341,7 @@ class DCGAN(object):
 
         # TODO : deal with anomaly_score(loss vector)
         # TODO : how to get the ground truth label(test_labels)
-        print(loss)
+        print(anomaly_score)
         print(test_labels)
 
     def discriminator(self, image, reuse=False):
