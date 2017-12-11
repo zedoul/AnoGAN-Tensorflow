@@ -316,7 +316,7 @@ class DCGAN(object):
                 zhats = np.clip(zhats, -1, 1)
 
             for index in xrange(batchSz):
-                anomaly_score[l+index] = loss
+                anomaly_score[l+index] = loss[index]
             print ("num : {}  cost time : {}".format(idx, time.time() - start))
 
         # TODO : deal with anomaly_score(loss vector)
