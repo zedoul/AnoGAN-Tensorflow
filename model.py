@@ -7,6 +7,7 @@ import tensorflow as tf
 import numpy as np
 from six.moves import xrange
 from keras.datasets import cifar10
+import cPickle
 
 from ops import *
 from utils import *
@@ -248,7 +249,6 @@ class DCGAN(object):
                     self.save(config.checkpoint_dir, counter)
 
     def detect_anomaly(self, config):
-
         try:
             tf.global_variables_initializer().run()
         except:
@@ -261,7 +261,6 @@ class DCGAN(object):
         #     "./data", config.dataset, self.input_fname_pattern))
 
         # used to validate first
-
         _, (self.data, Y_test) = cifar10.load_data()
         test_labels = np.array(map(lambda x: -1 if (x != 6) else 1, Y_test))
         nImgs = len(self.data)
@@ -314,6 +313,9 @@ class DCGAN(object):
 
         # TODO : deal with anomaly_score(loss vector)
         # TODO : how to get the ground truth label(test_labels)
+        f = open("score.dat", "wb")
+        cPickle.dump(anomaly_score, f)
+        f.close()
         print(anomaly_score)
         print(test_labels)
 

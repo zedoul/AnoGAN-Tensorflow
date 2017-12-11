@@ -23,7 +23,6 @@ flags.DEFINE_string("dataset", "celebA", "The name of dataset [celebA, mnist, ls
 flags.DEFINE_string("input_fname_pattern", "*.jpg", "Glob pattern of filename of input images [*]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_string("sample_dir", "samples", "Directory name to save the image samples [samples]")
-flags.DEFINE_boolean("train", False, "True for training, False for testing [False]")
 flags.DEFINE_boolean("crop", False, "True for training, False for testing [False]")
 flags.DEFINE_integer("latent_dim", 100, "Number of images to generate during test. [100]")
 FLAGS = flags.FLAGS
@@ -63,13 +62,7 @@ def main(_):
             sample_dir=FLAGS.sample_dir)
 
         show_all_variables()
-
-        if FLAGS.train:
-            dcgan.train(FLAGS)
-        else:
-            if not dcgan.load(FLAGS.checkpoint_dir)[0]:
-                raise Exception("[!] Train a model first, then run test mode")
-            # do the detection work
+        dcgan.train(FLAGS)
 
 
 if __name__ == '__main__':
