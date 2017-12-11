@@ -319,6 +319,7 @@ class DCGAN(object):
                 fd = {self.inputs: batch_images, self.z: zhats}
                 run_step = [self.complete_loss, self.grad_complete_loss, self.G]
                 loss, g, G_imgs = self.sess.run(run_step, feed_dict=fd)
+                print(loss)
 
                 # adam
                 m_prev = np.copy(m)
