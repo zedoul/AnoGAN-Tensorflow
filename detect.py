@@ -1,35 +1,51 @@
-import argparse
 import os
 import tensorflow as tf
+import numpy as np
 
 from model import DCGAN
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--approach', type=str,
-                    choices=['adam', 'hmc'],
-                    default='adam')
-parser.add_argument('--lr', type=float, default=0.01)
-parser.add_argument('--beta1', type=float, default=0.9)
-parser.add_argument('--beta2', type=float, default=0.999)
-parser.add_argument('--eps', type=float, default=1e-8)
-parser.add_argument('--hmcBeta', type=float, default=0.2)
-parser.add_argument('--hmcEps', type=float, default=0.001)
-parser.add_argument('--hmcL', type=int, default=100)
-parser.add_argument('--hmcAnneal', type=float, default=1)
-parser.add_argument('--Iter', type=int, default=500)
-parser.add_argument('--imgSize', type=int, default=64)
-parser.add_argument('--lam', type=float, default=0.1)
-parser.add_argument('--checkpointDir', type=str, default='checkpoint')
-parser.add_argument('--outDir', type=str, default='detection')
+flags = tf.app.flags
+flags.DEFINE_float("train_size", np.inf, "The size of train images [np.inf]")
+flags.DEFINE_integer("batch_size", 64, "The size of batch images [64]")
+flags.DEFINE_integer("input_height", 108, "The size of image to use (will be center cropped). [108]")
+flags.DEFINE_integer("input_width", None,
+                     "The size of image to use (will be center cropped). If None, same value as input_height [None]")
+flags.DEFINE_integer("output_height", 64, "The size of the output images to produce [64]")
+flags.DEFINE_integer("output_width", None,
+                     "The size of the output images to produce. If None, same value as output_height [None]")
+flags.DEFINE_string("dataset", "celebA", "The name of dataset [celebA, mnist, lsun]")
+flags.DEFINE_string("input_fname_pattern", "*.jpg", "Glob pattern of filename of input images [*]")
+flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
+flags.DEFINE_boolean("crop", False, "True for training, False for testing [False]")
+flags.DEFINE_integer("latent_dim", 100, "Number of images to generate during test. [100]")
 
-args = parser.parse_args()
+# detect param
+flags.DEFINE_float("lr", 0.01, "adam learning_rate")
+flags.DEFINE_float("beta1", 0.9, "adam param beta1")
+flags.DEFINE_float("beta2", 0.999, "adam param beta2")
+flags.DEFINE_float("eps", 1e-8, "adam param eps")
+flags.DEFINE_integer("Iter", 500, "iteration")
+flags.DEFINE_string("outDir", "completions", "output Dir")
 
-assert(os.path.exists(args.checkpointDir))
+FLAGS = flags.FLAGS
+
+assert(os.path.exists(FLAGS.checkpointDir))
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 with tf.Session(config=config) as sess:
-    dcgan = DCGAN(sess, image_size=args.imgSize,
-                  batch_size=min(64, len(args.imgs)),
-                  checkpoint_dir=args.checkpointDir, lam=args.lam)
-    dcgan.detect_anomaly(args)
+    dcgan = DCGAN(
+        sess,
+        input_width=FLAGS.input_width,
+        input_height=FLAGS.input_height,
+        output_width=FLAGS.output_width,
+        output_height=FLAGS.output_height,
+        batch_size=FLAGS.batch_size,
+        sample_num=FLAGS.batch_size,
+        z_dim=FLAGS.latent_dim,
+        dataset_name=FLAGS.dataset,
+        input_fname_pattern=FLAGS.input_fname_pattern,
+        crop=FLAGS.crop,
+        checkpoint_dir=FLAGS.checkpoint_dir)
+
+    dcgan.detect_anomaly(FLAGS)
