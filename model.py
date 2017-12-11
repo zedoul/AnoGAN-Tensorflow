@@ -136,11 +136,8 @@ class DCGAN(object):
         # detect anomaly
         numda = 0.1
         self.discriminator_loss = self.d_loss
-        print (self.discriminator_loss.shape)
         self.residual_loss = 2 * tf.nn.l2_loss(self.inputs - self.G)
-        print (self.residual_loss.shape)
         self.complete_loss = (1 - numda) * self.residual_loss + numda * self.discriminator_loss
-        print (self.complete_loss.shape)
         self.grad_complete_loss = tf.gradients(self.complete_loss, self.z)
 
     def train(self, config):
@@ -251,13 +248,6 @@ class DCGAN(object):
                     self.save(config.checkpoint_dir, counter)
 
     def detect_anomaly(self, config):
-        def make_dir(name):
-            p = os.path.join(config.outDir, name)
-            if not os.path.exists(p):
-                os.makedirs(p)
-
-        make_dir('generated')
-        make_dir('logs')
 
         try:
             tf.global_variables_initializer().run()
@@ -303,22 +293,11 @@ class DCGAN(object):
             m = 0
             v = 0
 
-            nRows = np.ceil(batchSz / 8)
-            nCols = min(8, batchSz)
-            save_images(batch_images[:batchSz, :, :, :], [nRows, nCols],
-                        os.path.join(config.outDir, 'before.png'))
-            for img in range(batchSz):
-                with open(os.path.join(config.outDir, 'logs/hats_{:02d}.log'.format(img)), 'a') as f:
-                    f.write('iter loss ' +
-                            ' '.join(['z{}'.format(zi) for zi in range(self.z_dim)]) +
-                            '\n')
-
-            G_imgs = 0
             # start iteration
             for i in xrange(config.Iter):
                 fd = {self.inputs: batch_images, self.z: zhats}
-                run_step = [self.complete_loss, self.grad_complete_loss, self.G]
-                loss, g, G_imgs = self.sess.run(run_step, feed_dict=fd)
+                run_step = [self.complete_loss, self.grad_complete_loss]
+                loss, g = self.sess.run(run_step, feed_dict=fd)
 
                 # adam
                 m_prev = np.copy(m)
@@ -329,12 +308,6 @@ class DCGAN(object):
                 v_hat = v / (1 - config.beta2 ** (i + 1))
                 zhats += - np.true_divide(config.lr * m_hat, (np.sqrt(v_hat) + config.eps))
                 zhats = np.clip(zhats, -1, 1)
-
-            for index in xrange(batchSz):
-                imgName = os.path.join(config.outDir, 'generated/{:04d}.png'.format(l + index))
-                nRows = np.ceil(batchSz / 8)
-                nCols = min(8, batchSz)
-                save_images(G_imgs[:batchSz, :, :, :], [nRows, nCols], imgName)
 
             for index in xrange(batchSz):
                 anomaly_score[l+index] = loss
@@ -420,14 +393,8 @@ class DCGAN(object):
             return tf.nn.tanh(h4)
 
     @property
-    def model_dir(self):
-        return "{}_{}_{}_{}".format(
-            self.dataset_name, self.batch_size,
-            self.output_height, self.output_width)
-
     def save(self, checkpoint_dir, step):
         model_name = "DCGAN.model"
-        checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
 
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
@@ -439,7 +406,6 @@ class DCGAN(object):
     def load(self, checkpoint_dir):
         import re
         print(" [*] Reading checkpoints...")
-        checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
 
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:

@@ -25,7 +25,6 @@ flags.DEFINE_float("beta1", 0.9, "adam param beta1")
 flags.DEFINE_float("beta2", 0.999, "adam param beta2")
 flags.DEFINE_float("eps", 1e-8, "adam param eps")
 flags.DEFINE_integer("Iter", 500, "iteration")
-flags.DEFINE_string("outDir", "completions", "output Dir")
 
 FLAGS = flags.FLAGS
 
