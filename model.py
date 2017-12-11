@@ -392,7 +392,6 @@ class DCGAN(object):
 
             return tf.nn.tanh(h4)
 
-    @property
     def save(self, checkpoint_dir, step):
         model_name = "DCGAN.model"
 
