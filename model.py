@@ -272,6 +272,7 @@ class DCGAN(object):
             l = idx * self.batch_size
             u = min((idx + 1) * self.batch_size, nImgs)
             batchSz = u - l
+            start = time.time()
 
             # batch_files = self.data[l:u]
             # batch = [
@@ -310,6 +311,7 @@ class DCGAN(object):
 
             for index in xrange(batchSz):
                 anomaly_score[l+index] = loss
+            print ("num : {}  cost time : {}".format(idx, time.time() - start))
 
         # TODO : deal with anomaly_score(loss vector)
         # TODO : how to get the ground truth label(test_labels)
