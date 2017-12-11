@@ -6,6 +6,7 @@ from glob import glob
 import tensorflow as tf
 import numpy as np
 from six.moves import xrange
+from keras.datasets import cifar10
 
 from ops import *
 from utils import *
@@ -263,8 +264,13 @@ class DCGAN(object):
         isLoaded = self.load(self.checkpoint_dir)
         assert (isLoaded)
 
-        self.data = glob(os.path.join(
-            "./data", config.dataset, self.input_fname_pattern))
+        # self.data = glob(os.path.join(
+        #     "./data", config.dataset, self.input_fname_pattern))
+
+        # used to validate first
+
+        _, (self.data, Y_test) = cifar10.load_data()
+        test_labels = np.array(map(lambda x: -1 if (x != 6) else 1, Y_test))
         nImgs = len(self.data)
         anomaly_score = np.zeros([nImgs], dtype='float32')
         batch_idxs = int(np.ceil(nImgs / self.batch_size))
@@ -273,19 +279,21 @@ class DCGAN(object):
             l = idx * self.batch_size
             u = min((idx + 1) * self.batch_size, nImgs)
             batchSz = u - l
-            batch_files = self.data[l:u]
-            batch = [
-                get_image(batch_file,
-                          input_height=self.input_height,
-                          input_width=self.input_width,
-                          resize_height=self.output_height,
-                          resize_width=self.output_width,
-                          crop=self.crop,
-                          grayscale=self.grayscale) for batch_file in batch_files]
-            if self.grayscale:
-                batch_images = np.array(batch).astype(np.float32)[:, :, :, None]
-            else:
-                batch_images = np.array(batch).astype(np.float32)
+
+            # batch_files = self.data[l:u]
+            # batch = [
+            #     get_image(batch_file,
+            #               input_height=self.input_height,
+            #               input_width=self.input_width,
+            #               resize_height=self.output_height,
+            #               resize_width=self.output_width,
+            #               crop=self.crop,
+            #               grayscale=self.grayscale) for batch_file in batch_files]
+            # if self.grayscale:
+            #     batch_images = np.array(batch).astype(np.float32)[:, :, :, None]
+            # else:
+            #     batch_images = np.array(batch).astype(np.float32)
+            batch_images = self.data[l:u] / 127.5 - 1.
 
             zhats = np.random.uniform(-1, 1, size=(batchSz, self.z_dim))
             m = 0
@@ -329,7 +337,7 @@ class DCGAN(object):
                 anomaly_score[l + index] = loss[index]
 
         # TODO : deal with anomaly_score(loss vector)
-        # TODO : how to get the ground truth label?
+        # TODO : how to get the ground truth label(test_labels)
 
     def discriminator(self, image, reuse=False):
         with tf.variable_scope("discriminator") as scope:
