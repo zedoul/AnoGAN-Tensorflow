@@ -29,7 +29,7 @@ flags.DEFINE_string("outDir", "completions", "output Dir")
 
 FLAGS = flags.FLAGS
 
-assert(os.path.exists(FLAGS.checkpointDir))
+assert(os.path.exists(FLAGS.checkpoint_dir))
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
