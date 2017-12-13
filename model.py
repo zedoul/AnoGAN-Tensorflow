@@ -268,7 +268,7 @@ class DCGAN(object):
 
         # used to validate first
         _, (self.data, Y_test) = cifar10.load_data()
-        test_labels = np.array(map(lambda x: -1 if (x != 6) else 1, Y_test))
+        test_labels = np.array(map(lambda x: 1 if (x != 6) else -1, Y_test))
         nImgs = len(self.data)
         anomaly_score = np.zeros([nImgs], dtype='float32')
         batch_idxs = int(np.ceil(nImgs / self.batch_size))
@@ -293,17 +293,21 @@ class DCGAN(object):
             #     batch_images = np.array(batch).astype(np.float32)[:, :, :, None]
             # else:
             #     batch_images = np.array(batch).astype(np.float32)
-            batch_images = self.data[l:u] / 127.5 - 1.
+            batch_images = self.data[l:u]
+            save_images(batch_images, image_manifold_size(batch_images.shape[0]),
+                        './{}/ori_{:02d}.png'.format(config.sample_dir, idx))
+            batch_images = batch_images / 127.5 - 1.
 
             zhats = np.random.uniform(-1, 1, size=(batchSz, self.z_dim))
             m = 0
             v = 0
 
+            samples = 0
             # start iteration
             for i in xrange(config.Iter):
                 fd = {self.inputs: batch_images, self.z: zhats}
-                run_step = [self.complete_loss, self.grad_complete_loss]
-                loss, g = self.sess.run(run_step, feed_dict=fd)
+                run_step = [self.complete_loss, self.grad_complete_loss, self.sampler]
+                loss, g, samples = self.sess.run(run_step, feed_dict=fd)
 
                 # adam
                 m_prev = np.copy(m)
@@ -315,6 +319,9 @@ class DCGAN(object):
                 zhats += - np.true_divide(config.lr * m_hat, (np.sqrt(v_hat) + config.eps))
                 zhats = np.clip(zhats, -1, 1)
 
+            save_images(samples, image_manifold_size(samples.shape[0]),
+                        './{}/recon_{:02d}.png'.format(config.sample_dir, idx))
+
             for index in xrange(batchSz):
                 anomaly_score[l+index] = loss[index]
             print ("num : {}  cost time : {}".format(idx, time.time() - start))
@@ -324,8 +331,6 @@ class DCGAN(object):
         f = open("score.dat", "wb")
         cPickle.dump(anomaly_score, f)
         f.close()
-        print(anomaly_score)
-        print(test_labels)
         AUC_score = roc_auc_score(test_labels, anomaly_score)
         print(AUC_score)
 
