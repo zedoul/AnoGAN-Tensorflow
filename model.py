@@ -268,6 +268,15 @@ class DCGAN(object):
 
         # used to validate first
         _, (self.data, Y_test) = cifar10.load_data()
+        #
+        # index_to_be_delete = [i for i, v in enumerate(Y_test) if v != 6]
+        # Y_test = np.delete(Y_test, index_to_be_delete, axis=0)
+        # Y_test = np.concatenate([Y_test, np.ones([1000])], axis=0)
+        # self.data = np.delete(self.data, index_to_be_delete, axis=0)
+        # self.data = np.concatenate([self.data, np.random.normal(0, 0.1, [1000, 32, 32, 3])], axis=0)
+        # print (self.data.shape)
+        # print (Y_test.shape)
+        #
         test_labels = np.array(map(lambda x: 1 if (x != 6) else -1, Y_test))
         nImgs = len(self.data)
         anomaly_score = np.zeros([nImgs], dtype='float32')
