@@ -14,6 +14,35 @@ from ops import *
 from utils import *
 
 
+def get_cifar10_noise_test():
+    _, (X_test, Y_test) = cifar10.load_data()
+    index_to_be_delete = [i for i, v in enumerate(Y_test) if v != 6]
+    Y_test = np.delete(Y_test, index_to_be_delete, axis=0)[:1000]
+    X_test = np.delete(X_test, index_to_be_delete, axis=0)[:1000]
+    Y_test = np.concatenate([Y_test, np.ones([1000, 1])], axis=0)
+    X_test = np.concatenate([X_test, np.random.normal(0, 0.01, [1000, 32, 32, 3])], axis=0)
+    return X_test, Y_test
+
+
+def get_cifar10_other_test():
+    _, (X_test, Y_test) = cifar10.load_data()
+    index_to_be_delete = [i for i, v in enumerate(Y_test) if v != 6]
+    Y_9 = np.delete(Y_test, index_to_be_delete, axis=0)[:1000]
+    Y_all = np.concatenate([Y_9, np.ones([1000, 1])], axis=0)
+    X_9 = np.delete(X_test, index_to_be_delete, axis=0)[:1000]
+    X_concat = [X_9]
+    for index in range(10):
+        if index is not 6:
+            index_to_be_delete = [i for i, v in enumerate(Y_test) if v != index]
+            if index is not 9:
+                temp = np.delete(X_test, index_to_be_delete, axis=0)[:111]
+            else:
+                temp = np.delete(X_test, index_to_be_delete, axis=0)[:112]
+            X_concat.append(temp)
+    X_all = np.concatenate(X_concat, axis=0)
+    return X_all, Y_all
+
+
 def conv_out_size_same(size, stride):
     return int(math.ceil(float(size) / float(stride)))
 
@@ -267,16 +296,7 @@ class DCGAN(object):
         #     "./data", config.dataset, self.input_fname_pattern))
 
         # used to validate first
-        _, (self.data, Y_test) = cifar10.load_data()
-        #
-        # index_to_be_delete = [i for i, v in enumerate(Y_test) if v != 6]
-        # Y_test = np.delete(Y_test, index_to_be_delete, axis=0)
-        # Y_test = np.concatenate([Y_test, np.ones([1000])], axis=0)
-        # self.data = np.delete(self.data, index_to_be_delete, axis=0)
-        # self.data = np.concatenate([self.data, np.random.normal(0, 0.1, [1000, 32, 32, 3])], axis=0)
-        # print (self.data.shape)
-        # print (Y_test.shape)
-        #
+        self.data, Y_test = get_cifar10_other_test()
         test_labels = np.array(map(lambda x: 1 if (x != 6) else -1, Y_test))
         nImgs = len(self.data)
         anomaly_score = np.zeros([nImgs], dtype='float32')
@@ -335,8 +355,6 @@ class DCGAN(object):
                 anomaly_score[l+index] = loss[index]
             print ("num : {}  cost time : {}".format(idx, time.time() - start))
 
-        # TODO : deal with anomaly_score(loss vector)
-        # TODO : how to get the ground truth label(test_labels)
         f = open("score.dat", "wb")
         cPickle.dump(anomaly_score, f)
         f.close()
